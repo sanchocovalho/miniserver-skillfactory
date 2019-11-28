@@ -1,0 +1,59 @@
+import os
+import bottle
+from truckpad.bottle.cors import CorsPlugin, enable_cors
+import todos_db as dbase
+
+session = dbase.create_session()
+
+app = bottle.Bottle()
+
+@enable_cors
+@app.route('/', method=['GET', 'POST'])
+def get_or_add_task():
+    if bottle.request.method == 'GET':
+        tasks = [dbase.task_to_dict(task) for task in dbase.get_all_tasks(session)]
+        return {'tasks': sorted(tasks, key=lambda x: x['uid']),
+                'total': len(tasks),
+                'uncompleted': dbase.get_uncompleted_tasks(session)}
+    elif bottle.request.method == "POST":
+        description = bottle.request.json['description']
+        if len(description) > 0:
+            tasks = [dbase.task_to_dict(task) for task in dbase.get_all_tasks(session)]
+            uid = 1
+            if tasks:
+                for id, task in enumerate(tasks):
+                    if task['uid'] != id + 1:
+                        uid = id + 1
+                        break
+                    else:
+                        uid = task['uid'] + 1
+            dbase.add_task(session, uid, description)
+        return 'The task is added successfully'
+
+@enable_cors
+@app.route('/<uid:int>', method=['GET', 'PUT', 'DELETE'])
+def modify_or_delete_task(uid):
+    try:
+        if bottle.request.method == 'GET':
+            task = dbase.get_task_by_id(session, uid)
+            return dbase.task_to_dict(task)
+        elif bottle.request.method == 'DELETE':
+            dbase.delete_task(session, uid)
+            return 'The task is deleted successfully'
+        elif bottle.request.method == 'PUT':
+            is_completed = bottle.request.json.get('is_completed', False)
+            dbase.make_task_completed(session, uid, is_completed)
+            return 'The task is completed successfully'
+    except IndexError:
+        return bottle.HTTPError(404, f'No task with uid {uid}')
+
+app.install(CorsPlugin(origins=os.environ.get('CORS_URLS')))
+
+if os.environ.get('APP_LOCATION') == 'heroku':
+    bottle.run(app,
+               host="0.0.0.0",
+               port=int(os.environ.get("PORT", 5000)))
+else:
+    bottle.run(app,
+               host='localhost',
+               port=5000)
