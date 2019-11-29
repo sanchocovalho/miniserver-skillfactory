@@ -12,7 +12,7 @@ app = bottle.Bottle()
 def get_or_add_task():
     if bottle.request.method == 'GET':
         tasks = [dbase.task_to_dict(task) for task in dbase.get_all_tasks(session)]
-        return {'tasks': tasks,
+        return {'tasks': sorted(tasks, key=lambda x: x['uid']),
                 'total': len(tasks),
                 'uncompleted': dbase.get_uncompleted_tasks(session)}
     elif bottle.request.method == "POST":
