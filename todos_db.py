@@ -32,7 +32,6 @@ def create_session():
 def get_task_by_id(session, uid):
     return session.query(TodoItem).filter(TodoItem.uid == uid).all()
 
-
 def make_task_completed(session, uid, is_completed):
     task = get_task_by_id(session, uid)
     task[0].is_completed = int(is_completed)

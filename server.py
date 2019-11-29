@@ -10,15 +10,14 @@ app = bottle.Bottle()
 @enable_cors
 @app.route('/', method=['GET', 'POST'])
 def get_or_add_task():
-    try:
-        if bottle.request.method == 'GET':
-            tasks = [dbase.task_to_dict(task) for task in dbase.get_all_tasks(session)]
-            return {'tasks': sorted(tasks, key=lambda x: x['uid']),
-                    'total': len(tasks),
-                    'uncompleted': dbase.get_uncompleted_tasks(session)}
-        elif bottle.request.method == "POST":
-            description = bottle.request.json['description']
-            if len(description) > 0:
+    if bottle.request.method == 'GET':
+        tasks = [dbase.task_to_dict(task) for task in dbase.get_all_tasks(session)]
+        return {'tasks': tasks,
+                'total': len(tasks),
+                'uncompleted': dbase.get_uncompleted_tasks(session)}
+    elif bottle.request.method == "POST":
+        description = bottle.request.json['description']
+        if len(description) > 0:
             uid = 1
             while 1:
                 task = dbase.get_task_by_id(session, uid)
@@ -26,9 +25,7 @@ def get_or_add_task():
                     break
                 uid += 1
             dbase.add_task(session, uid, description)
-            return 'The task is added successfully'
-    except IndexError:
-        return bottle.HTTPError(500, 'Internal Server Error')
+        return 'The task is added successfully'
 
 @enable_cors
 @app.route('/<uid:int>', method=['GET', 'PUT', 'DELETE'])
