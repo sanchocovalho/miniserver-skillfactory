@@ -21,7 +21,7 @@ def create_session():
     todos_table = sa.Table(
         'todos_table',
         metadata,
-        sa.Column('uid', sa.INTEGER, primary_key=True, autoincrement=True),
+        sa.Column('uid', sa.INTEGER, primary_key=True, autoincrement=False),
         sa.Column('description', sa.TEXT),
         sa.Column('is_completed', sa.INTEGER, default=0))
     
@@ -30,12 +30,12 @@ def create_session():
     return Sessions()
 
 def get_task_by_id(session, uid):
-    return session.query(TodoItem).filter(TodoItem.uid == uid)[0]
+    return session.query(TodoItem).filter(TodoItem.uid == uid).all()
 
 
 def make_task_completed(session, uid, is_completed):
     task = get_task_by_id(session, uid)
-    task.is_completed = int(is_completed)
+    task[0].is_completed = int(is_completed)
     session.commit()
 
 def task_to_dict(task):
@@ -46,14 +46,14 @@ def task_to_dict(task):
 def get_all_tasks(session):
     return session.query(TodoItem).all()
 
-def add_task(session, description):
-    task = TodoItem(description=description)
+def add_task(session, uid, description):
+    task = TodoItem(uid=uid, description=description)
     session.add(task)
     session.commit()
 
 def delete_task(session, uid):
     task = get_task_by_id(session, uid)
-    session.delete(task)
+    session.delete(task[0])
     session.commit()
 
 def get_uncompleted_tasks(session):

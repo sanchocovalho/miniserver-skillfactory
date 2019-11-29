@@ -19,7 +19,13 @@ def get_or_add_task():
         elif bottle.request.method == "POST":
             description = bottle.request.json['description']
             if len(description) > 0:
-                dbase.add_task(session, description)
+            uid = 1
+            while 1:
+                task = dbase.get_task_by_id(session, uid)
+                if not task:
+                    break
+                uid += 1
+            dbase.add_task(session, uid, description)
             return 'The task is added successfully'
     except IndexError:
         return bottle.HTTPError(500, 'Internal Server Error')
@@ -30,7 +36,7 @@ def modify_or_delete_task(uid):
     try:
         if bottle.request.method == 'GET':
             task = dbase.get_task_by_id(session, uid)
-            return dbase.task_to_dict(task)
+            return dbase.task_to_dict(task[0])
         elif bottle.request.method == 'DELETE':
             dbase.delete_task(session, uid)
             return 'The task is deleted successfully'
