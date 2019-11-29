@@ -46,8 +46,8 @@ def task_to_dict(task):
 def get_all_tasks(session):
     return session.query(TodoItem).all()
 
-def add_task(session, uid, description):
-    task = TodoItem(uid=uid, description=description)
+def add_task(session, description):
+    task = TodoItem(description=description)
     session.add(task)
     session.commit()
 
