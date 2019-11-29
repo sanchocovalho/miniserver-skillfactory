@@ -10,25 +10,19 @@ app = bottle.Bottle()
 @enable_cors
 @app.route('/', method=['GET', 'POST'])
 def get_or_add_task():
-    if bottle.request.method == 'GET':
-        tasks = [dbase.task_to_dict(task) for task in dbase.get_all_tasks(session)]
-        return {'tasks': sorted(tasks, key=lambda x: x['uid']),
-                'total': len(tasks),
-                'uncompleted': dbase.get_uncompleted_tasks(session)}
-    elif bottle.request.method == "POST":
-        description = bottle.request.json['description']
-        if len(description) > 0:
-            # tasks = [dbase.task_to_dict(task) for task in dbase.get_all_tasks(session)]
-            # uid = 1
-            # if tasks:
-            #     for id, task in enumerate(tasks):
-            #         if task['uid'] != id + 1:
-            #             uid = id + 1
-            #             break
-            #         else:
-            #             uid = task['uid'] + 1
-            dbase.add_task(session, description)
-        return 'The task is added successfully'
+    try:
+        if bottle.request.method == 'GET':
+            tasks = [dbase.task_to_dict(task) for task in dbase.get_all_tasks(session)]
+            return {'tasks': sorted(tasks, key=lambda x: x['uid']),
+                    'total': len(tasks),
+                    'uncompleted': dbase.get_uncompleted_tasks(session)}
+        elif bottle.request.method == "POST":
+            description = bottle.request.json['description']
+            if len(description) > 0:
+                dbase.add_task(session, description)
+            return 'The task is added successfully'
+    except IndexError:
+        return bottle.HTTPError(500, 'Internal Server Error')
 
 @enable_cors
 @app.route('/<uid:int>', method=['GET', 'PUT', 'DELETE'])
