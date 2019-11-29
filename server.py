@@ -18,15 +18,16 @@ def get_or_add_task():
     elif bottle.request.method == "POST":
         description = bottle.request.json['description']
         if len(description) > 0:
-            tasks = [dbase.task_to_dict(task) for task in dbase.get_all_tasks(session)]
-            uid = 1
-            for id, task in enumerate(tasks):
-                if task['uid'] != id + 1:
-                    uid = id + 1
-                    break
-                else:
-                    uid = task['uid'] + 1
-            dbase.add_task(session, uid, description)
+            # tasks = [dbase.task_to_dict(task) for task in dbase.get_all_tasks(session)]
+            # uid = 1
+            # if tasks:
+            #     for id, task in enumerate(tasks):
+            #         if task['uid'] != id + 1:
+            #             uid = id + 1
+            #             break
+            #         else:
+            #             uid = task['uid'] + 1
+            dbase.add_task(session, description)
         return 'The task is added successfully'
 
 @enable_cors
